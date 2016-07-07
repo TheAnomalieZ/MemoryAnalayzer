@@ -1,24 +1,31 @@
 import com.jrockit.mc.flightrecorder.spi.IEvent;
 import com.jrockit.mc.flightrecorder.spi.IView;
 
-import java.util.Iterator;
-import java.util.List;
+import java.util.Map;
 
-/**
- * Created by vithulan on 7/7/16.
- */
 public class GCTimeHandler {
 
-    final IView view;
-    final String EVENT_TYPE = "Garbage Collection";
-    public GCTimeHandler(IView view, List<MemEvent> eventList){
-        this.view=view;
+    private final IView view;
+    private final Map<Long,MemEvent> eventMap;
+    private final String EVENT_TYPE = "Garbage Collection";
+    public GCTimeHandler(IView view, Map<Long,MemEvent> eventMap){
+        this.eventMap = eventMap;
+        this.view = view;
     }
 
-    public void getGCDuration() {
+    public void configureEventGCTime() {
         for (IEvent event : view) {
             if(EVENT_TYPE.equals(event.getEventType().getName())){
-                System.out.println(event.getValue("sumOfPauses").toString());
+                MemEvent memEvent = new MemEvent();
+                memEvent.setStartTimestamp(event.getStartTimestamp());
+                memEvent.setEndTimestamp(event.getEndTimestamp());
+                memEvent.setGcId(Long.parseLong(event.getValue("gcId").toString()));
+                if(!eventMap.containsKey(memEvent.getGcId())){
+                    eventMap.put(memEvent.getGcId(),memEvent);
+                }
+                else {
+                    System.out.println("gcID already exists!");
+                }
             }
         }
     }
